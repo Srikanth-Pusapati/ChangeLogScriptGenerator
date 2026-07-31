@@ -1,0 +1,18 @@
+flowchart LR
+    subgraph P1["Phase 1: Local CLI (Weeks 1-2)"]
+        CLI["Python CLI<br/>runs on your laptop"]
+    end
+    subgraph P2["Phase 2: GitHub Action (Weeks 3-4)"]
+        ACT["Action in CI<br/>runs on tag push"]
+    end
+    subgraph P3["Phase 3: Hosted SaaS (Month 2+)"]
+        WEB["Web App<br/>Next.js on Vercel"]
+        API["API + Worker<br/>webhook receiver, queue"]
+        DB["Postgres<br/>orgs, repos, changelogs"]
+        BILL["Stripe Billing"]
+        HOST["Public changelog pages<br/>yourapp.com/acme"]
+    end
+    CLI --> ACT --> WEB
+    WEB --- API --- DB
+    WEB --- BILL
+    API --- HOST

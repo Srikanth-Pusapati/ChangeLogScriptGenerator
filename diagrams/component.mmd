@@ -1,0 +1,29 @@
+flowchart TB
+    subgraph Sources["Input Sources"]
+        GH["GitHub Repo<br/>(commits, PRs, tags)"]
+        JIRA["Jira / Linear<br/>(optional, Phase 3)"]
+    end
+
+    subgraph Core["Changelog Generator Core"]
+        COLLECT["Collector<br/>git log / GitHub API<br/>diff between two tags"]
+        NORM["Normalizer<br/>parse conventional commits,<br/>PR titles, labels"]
+        CLASS["Classifier<br/>Features / Fixes / Breaking /<br/>Internal (filtered out)"]
+        PROMPT["Prompt Builder<br/>audience + tone template"]
+        LLM["LLM Client<br/>Claude / OpenAI API"]
+        RENDER["Renderer<br/>Markdown / HTML / JSON"]
+    end
+
+    subgraph Outputs["Output Targets"]
+        MD["CHANGELOG.md<br/>(commit or PR)"]
+        REL["GitHub Release Notes"]
+        SLACK["Slack / Email announcement<br/>(Phase 2+)"]
+        PAGE["Hosted changelog page<br/>(Phase 3 SaaS)"]
+    end
+
+    GH --> COLLECT
+    JIRA -.-> COLLECT
+    COLLECT --> NORM --> CLASS --> PROMPT --> LLM --> RENDER
+    RENDER --> MD
+    RENDER --> REL
+    RENDER -.-> SLACK
+    RENDER -.-> PAGE

@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant GA as GitHub Action / CLI
+    participant GHA as GitHub API
+    participant GEN as Generator (Python)
+    participant LLM as LLM API (Claude/OpenAI)
+    participant OUT as Repo / Release
+
+    Dev->>GA: push tag v1.4.0 (or run CLI)
+    GA->>GHA: get previous tag (v1.3.0)
+    GA->>GHA: list commits + merged PRs between tags
+    GHA-->>GA: commits, PR titles, bodies, labels
+    GA->>GEN: raw change list + config (tone, audience)
+    GEN->>GEN: normalize + classify + filter noise
+    GEN->>LLM: prompt: grouped changes + style template
+    LLM-->>GEN: draft changelog (structured JSON)
+    GEN->>GEN: validate schema, render Markdown
+    GEN->>OUT: open PR updating CHANGELOG.md
+    GEN->>OUT: publish GitHub Release notes
+    OUT-->>Dev: review + merge (human in the loop)
