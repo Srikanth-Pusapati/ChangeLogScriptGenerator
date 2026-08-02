@@ -31,11 +31,16 @@ packages = ["src/changelog_gen"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+# `scripts` is on the path so tests/test_open_pr.py can import the standalone
+# PR helper, which lives outside the package by design (it must run without
+# the virtualenv).
+pythonpath = ["src", "scripts"]
 
 [tool.ruff]
 line-length = 100
-src = ["src", "tests"]
+# `scripts` is listed so ruff knows `open_pr` is first-party and sorts the
+# import into the right block.
+src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint.per-file-ignores]
 # `typer.Option(...)` in a default argument is the framework's own idiom —
