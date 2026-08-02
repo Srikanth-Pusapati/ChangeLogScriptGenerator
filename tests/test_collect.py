@@ -1,10 +1,6 @@
 """Collector tests. These run against a real, tiny git repo built in a tmpdir.
 
-ELI5
-----
-Mocking `git` would test our mock, not our parsing. Creating three commits in a
-temp directory takes milliseconds and tests the thing that actually breaks:
-the `--pretty=format:` parsing.
+The `repo` fixture lives in conftest.py — the CLI tests use it too.
 
 The GitHub half is tested with a fake `requests.Session`, so the suite never
 touches the network.
@@ -24,33 +20,6 @@ from changelog_gen.collect import (
     previous_tag,
 )
 from changelog_gen.models import ChangeItem
-
-
-@pytest.fixture
-def repo(tmp_path):
-    def run(*args):
-        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
-
-    run("init", "-b", "main")
-    run("config", "user.email", "test@example.com")
-    run("config", "user.name", "Test")
-    run("remote", "add", "origin", "git@github.com:acme/widgets.git")
-
-    (tmp_path / "a.txt").write_text("a")
-    run("add", ".")
-    run("commit", "-m", "feat: first feature")
-    run("tag", "v1.0.0")
-
-    (tmp_path / "b.txt").write_text("b")
-    run("add", ".")
-    run("commit", "-m", "fix: second thing\n\nBody line here.\nCloses #42")
-
-    (tmp_path / "c.txt").write_text("c")
-    run("add", ".")
-    run("commit", "-m", "Add webhook retries (#482)")
-    run("tag", "v1.1.0")
-
-    return str(tmp_path)
 
 
 def test_collect_commits_parses_subject_body_and_author(repo):

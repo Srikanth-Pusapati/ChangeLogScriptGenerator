@@ -18,7 +18,9 @@ Commands, in the order you'll use them while building:
 from __future__ import annotations
 
 import json
+from enum import Enum
 from pathlib import Path
+from typing import get_args
 
 import typer
 from rich.console import Console
@@ -43,6 +45,24 @@ app = typer.Typer(
 )
 console = Console()
 err = Console(stderr=True)
+
+
+class OutputFormat(str, Enum):
+    """Render targets for `generate --format`.
+
+    An Enum rather than a plain `str` so Typer rejects typos itself. With a
+    bare string, `--format markdwn` silently fell through to markdown — the
+    output looked fine, so you'd never know the flag hadn't taken effect.
+    """
+
+    markdown = "markdown"
+    release = "release"
+    json = "json"
+
+
+# The valid tones are declared once, as a Literal on Config. Reading them back
+# out means `--style` can never drift from what .changelog.yml accepts.
+TONES: tuple[str, ...] = get_args(Config.model_fields["tone"].annotation)
 
 
 def _version_callback(value: bool) -> None:
@@ -182,8 +202,10 @@ def generate(
     repo: str = typer.Option(".", "--repo", help="Path to the git checkout."),
     config_path: Path | None = typer.Option(None, "--config", help="Path to .changelog.yml."),
     no_github: bool = typer.Option(False, "--no-github", help="Skip the GitHub PR lookup."),
-    style: str | None = typer.Option(None, "--style", help="Override tone: professional|friendly|technical."),
-    fmt: str = typer.Option("markdown", "--format", help="markdown | release | json"),
+    style: str | None = typer.Option(
+        None, "--style", help=f"Override the configured tone: {' | '.join(TONES)}."
+    ),
+    fmt: OutputFormat = typer.Option(OutputFormat.markdown, "--format", help="Render target."),
     out: Path | None = typer.Option(None, "--out", help="Write to this file instead of stdout."),
     update_changelog: Path | None = typer.Option(
         None, "--update-changelog", help="Insert the section into this CHANGELOG.md (idempotent)."
@@ -194,6 +216,12 @@ def generate(
 
     config = _load(config_path, repo)
     if style:
+        # `model_copy` does NOT re-run validation, so an unchecked value here
+        # would sail straight into the prompt as `Tone: shakespearean.` This
+        # check is what actually enforces the Literal on Config.tone.
+        if style not in TONES:
+            err.print(f"[red]Unknown --style '{style}'.[/red] Choose one of: {', '.join(TONES)}")
+            raise typer.Exit(code=2)
         config = config.model_copy(update={"tone": style})
     publishable, _ = _gather(to_ref, from_ref, repo, config, no_github=no_github)
 
@@ -206,9 +234,9 @@ def generate(
     for warning in warnings:
         err.print(f"[yellow]warning:[/yellow] {warning}")
 
-    if fmt == "json":
+    if fmt is OutputFormat.json:
         rendered = json.dumps(response.model_dump(mode="json"), indent=2)
-    elif fmt == "release":
+    elif fmt is OutputFormat.release:
         rendered = render_github_release(response)
     else:
         rendered = render_markdown(response)
