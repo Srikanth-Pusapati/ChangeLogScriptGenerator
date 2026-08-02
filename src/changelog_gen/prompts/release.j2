@@ -1,0 +1,29 @@
+{% if product %}Product: {{ product }}
+{% endif %}Release version: {{ version }}
+Sections to use, in this order: {{ section_names | join(", ") }}
+
+Here are two examples of the rewriting quality expected.
+
+Example — bad commit -> good entry:
+  input:  {"id": "#312", "kind": "fix", "title": "fix null check in webhook retry loop"}
+  output: {"text": "Webhooks now retry reliably instead of dropping after a transient failure.", "source_ids": ["#312"]}
+
+Example — merging related changes:
+  input:  [{"id": "#401", "kind": "feature", "title": "add CSV export endpoint"},
+           {"id": "a1b2c3", "kind": "improvement", "title": "stream CSV export to avoid OOM"}]
+  output: {"text": "Export your data as CSV, including very large datasets.", "source_ids": ["#401", "a1b2c3"]}
+
+Changes in this release, already grouped by section:
+
+{{ changes_json }}
+
+Produce release notes as JSON matching this schema:
+
+{{ schema_json }}
+{% if retry_error %}
+Your previous response was rejected by schema validation with this error:
+
+{{ retry_error }}
+
+Return corrected JSON. Do not explain the error.
+{% endif %}

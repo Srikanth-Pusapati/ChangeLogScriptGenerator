@@ -1,0 +1,28 @@
+# Config for this repo itself — also serves as the worked example.
+product: "changelog-gen — turns Git history into publishable release notes"
+tone: friendly            # professional | friendly | technical
+audience: developers      # customers | developers | internal
+
+sections: [Features, Improvements, Bug Fixes, Breaking Changes]
+
+# Titles matching any of these globs never reach the LLM.
+ignore:
+  - "chore(*"
+  - "chore:*"
+  - "ci:*"
+  - "build:*"
+  - "bump *"
+  - "Merge branch*"
+
+breaking_labels: [breaking, breaking-change]
+
+# Map this repo's PR labels onto our buckets.
+label_map:
+  enhancement: improvement
+  bug: fix
+
+llm:
+  provider: anthropic
+  model: claude-haiku-4-5   # $1 / $5 per Mtok — a release costs about $0.01
+  max_tokens: 4000
+  max_retries: 1

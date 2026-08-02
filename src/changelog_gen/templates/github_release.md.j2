@@ -1,0 +1,9 @@
+{{ response.headline }}
+{% for section in response.sections %}{% if section.entries %}
+
+## {{ section.name }}
+
+{% for entry in section.entries %}
+* {{ entry.text }}{{ (" (" ~ entry.source_ids | join(", ") ~ ")") if show_sources and entry.source_ids else "" }}
+{% endfor %}
+{% endif %}{% endfor %}
