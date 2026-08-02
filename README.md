@@ -74,8 +74,21 @@ src/changelog_gen/
   prompts/      # versioned Jinja2 prompt templates (system + user)
   templates/    # Markdown / GitHub Release render templates
   render.py     # renderers + rule-based fallback response
-tests/          # 60 passing, 4 skipped (the LLM loop — see TODO.md #2)
+scripts/
+  open_pr.py    # push + open a pre-filled GitHub PR form (no `gh` CLI needed)
+tests/          # 78 passing, 4 skipped (the LLM loop — see TODO.md #2)
 ```
+
+## Contributing
+
+Never commit to `main`. Branch, commit, then:
+
+```bash
+python3 scripts/open_pr.py     # pushes and opens a PR into feature/dev-integration
+```
+
+See [PROGRESS.md §6](PROGRESS.md) for why this uses GitHub's compare URL rather
+than `gh pr create`.
 
 ## Roadmap
 

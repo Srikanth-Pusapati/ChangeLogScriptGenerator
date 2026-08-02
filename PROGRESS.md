@@ -36,7 +36,7 @@ changelog-gen --help
 changelog-gen collect --to HEAD --no-github     # what changed? (a table)
 changelog-gen preview --to HEAD --no-github     # the changelog, rules-only
 changelog-gen preview --to HEAD --show-prompt   # the exact prompt + cost estimate
-pytest -q                                        # 60 passing, 4 skipped
+pytest -q                                        # 78 passing, 4 skipped
 ```
 
 Point it at a repo with real tags to see it properly:
@@ -114,6 +114,7 @@ together.
 | Rules-first classifier | ✅ Done | 13-case corpus in tests |
 | GitHub slug detection (incl. SSH aliases) | ✅ Done | Handles `git@github-personal:owner/repo` |
 | Markdown + GitHub Release renderers | ✅ Done | Idempotent `CHANGELOG.md` updates |
+| CLI flag validation | ✅ Done | `--style` / `--format` typos now error instead of being ignored |
 | Prompt templates (system + user) | ✅ Done | Inspect with `--show-prompt` |
 | Response validation + hallucination guard | ✅ Done | 8 tests |
 | **`AnthropicProvider.complete`** | ⬜ **Next** | ~15 lines. Roadmap in the docstring. |
@@ -140,7 +141,7 @@ production-builders."* So you write it, not me.
 4. Implement until `pytest -q` is green with zero skips.
 5. Then run it for real: `export ANTHROPIC_API_KEY=... && changelog-gen generate --to HEAD --no-github`
 
-**You'll know you're done when:** all 64 tests pass, and `generate` produces a
+**You'll know you're done when:** all 82 tests pass, and `generate` produces a
 changelog you'd actually publish.
 
 **Want me to write it instead, or pair on it?** Just say so — but read the
@@ -151,7 +152,40 @@ messages into the test corpus, tune the prompt. See [TODO.md](TODO.md).
 
 ---
 
-## 6. Honest deviations from the design docs
+## 6. How changes land (the git flow)
+
+Nothing is ever committed to `main`. Work happens on a feature branch and lands
+via a PR into `feature/dev-integration`, which is where you verify it before
+promoting to prod. That review gate is the whole point.
+
+```bash
+git switch -c feature/whatever
+# ... work, commit ...
+python3 scripts/open_pr.py            # pushes, then opens a pre-filled PR form
+```
+
+**Why a script instead of `gh pr create`?** The `gh` CLI on this machine is
+signed in as a different GitHub account (reserved for other work) and has no
+write access here, so `gh pr create` returns *"must be a collaborator"*.
+
+`git push` still works, because that authenticates over SSH with your own key
+via the `github-personal` host alias. So the script leans on the one PR path
+that needs no extra credentials at all: it pushes, then opens GitHub's
+**compare URL** with `?expand=1&title=…&body=…`, which is the ordinary "Open a
+pull request" form with everything already filled in. You read it and click.
+
+Useful flags: `--base`, `--title`, `--body-file`, `--print-only`, `--no-push`.
+
+Two details worth knowing, because both are easy to get wrong:
+- The script carries its own copy of the remote-URL regex so it runs with plain
+  `python3`, before any `pip install`. `tests/test_open_pr.py` pins that copy to
+  the original in `collect.py`, so the two can't drift apart.
+- A body too long for a URL is moved to your clipboard rather than truncated.
+  Half a PR description that *looks* complete is worse than none.
+
+---
+
+## 7. Honest deviations from the design docs
 
 Small things I changed and why — so the docs and the code don't quietly drift apart.
 
@@ -167,7 +201,7 @@ Small things I changed and why — so the docs and the code don't quietly drift 
 
 ---
 
-## 7. The gate you already committed to
+## 8. The gate you already committed to
 
 From the BRD, so it's in front of you and not buried in a PDF:
 
